@@ -37,6 +37,9 @@ jobs:
       - name: output list of changed files
         run: echo ${{ steps.check-changed-files.outputs.all_changed_and_modified_files }}
 
+      - name: Upload Codecov config
+        run: cat codecov.yml | curl --data-binary @- https://codecov.io/validate
+
   build-server:
     name: Build PNX server
     timeout-minutes: 10
@@ -80,9 +83,6 @@ jobs:
         if: success() && github.repository == 'PowerNukkitX/PowerNukkitX' && contains(github.ref_name, 'master')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload Codecov config
-        run: cat codecov.yml | curl --data-binary @- https://codecov.io/validate
 
       - name: Read version
         id: read_version
