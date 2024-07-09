@@ -81,6 +81,9 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Upload Codecov config
+        run: cat codecov.yml | curl --data-binary @- https://codecov.io/validate
+
       - name: Read version
         id: read_version
         uses: christian-draeger/read-properties@1.1.1
