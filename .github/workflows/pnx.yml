@@ -146,7 +146,7 @@ jobs:
         uses: Xotl/cool-github-releases@v1
         if: success() && github.repository == 'AzaleeX/PowerNukkitX' && contains(github.ref_name, 'master')
         with:
-          mode: create
+          mode: update
           isPrerelease: false
           tag_name: snapshot
           release_name: "Latest Snapshot"
