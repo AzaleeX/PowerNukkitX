@@ -84,14 +84,14 @@ jobs:
 
       - name: Clone scripts repository
         run: |
-          git clone https://github.com/PowerNukkitX/scripts.git scripts
+          git clone https://github.com/PowerNukkitX/scripts.git
 
       - name: Copy start scripts
         run: |
-          cp scripts/start.sh build/
-          cp scripts/start.bat build/
-          cp scripts/start.cmd build/
-          cp scripts/start.ps1 build/
+          cp start.sh build/
+          cp start.bat build/
+          cp start.cmd build/
+          cp start.ps1 build/
 
       - name: Rename artifacts
         run: |
@@ -134,14 +134,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-server
     steps:
+      - name: Check if release exists
+        id: check_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: releases } = await github.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return releases.some(release => release.tag_name === 'snapshot');
+  
       - name: Delete existing release
+        if: steps.check_release.outputs.result == 'true'
         uses: Xotl/cool-github-releases@v1
-        if: success() && github.repository == 'AzaleeX/PowerNukkitX' && contains(github.ref_name, 'master')
         with:
           mode: delete
           tag_name: snapshot
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
+  
       - name: Release latest build
         uses: Xotl/cool-github-releases@v1
         if: success() && github.repository == 'AzaleeX/PowerNukkitX' && contains(github.ref_name, 'master')
@@ -154,18 +165,18 @@ jobs:
             This is the **latest version of PowerNukkitX**, built from the latest source.
             (_Please note that the date on GitHub might appear outdated due to certain limitations._)
             **Corresponding commit:** _<https://github.com/powernukkitx/powernukkitx/commit/${{ github.sha }}>
-
+  
             > [!NOTE]
             > If you encounter any issues, please report them directly on our [Discord](https://discord.gg/apwd7uauZg) or in the [GitHub Issues](https://github.com/powernukkitx/powernukkitx/issues) tab.
-
+  
             ### How to Update
-
+  
             To update to the latest version, follow these steps:
             1. Download the `powernukkitx.jar` file from the assets below.
             2. Replace the `powernukkitx.jar` file in your server's directory with the new one.
             3. Restart your server.
             4. Enjoy the latest features and bug fixes!
-
+  
             Thank you for using PowerNukkitX ⭐
           assets: |
             build/powernukkitx-run.zip
@@ -184,7 +195,7 @@ jobs:
             build/hash/md5/libs.zip.md5|text/plain
           replace_assets: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
+  
       - name: Release new version
         uses: ncipollo/release-action@v1
         if: success() && contains(github.event.commits[0].message, '+u') && github.repository == 'AzaleeX/PowerNukkitX' && contains(github.ref_name, 'master')
