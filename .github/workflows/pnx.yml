@@ -84,14 +84,14 @@ jobs:
 
       - name: Clone scripts repository
         run: |
-          git clone https://github.com/PowerNukkitX/scripts.git
+          git clone https://github.com/PowerNukkitX/scripts.git scripts
 
       - name: Copy start scripts
         run: |
-          cp start.sh build/
-          cp start.bat build/
-          cp start.cmd build/
-          cp start.ps1 build/
+          cp scripts/start.sh build/
+          cp scripts/start.bat build/
+          cp scripts/start.cmd build/
+          cp scripts/start.ps1 build/
 
       - name: Rename artifacts
         run: |
