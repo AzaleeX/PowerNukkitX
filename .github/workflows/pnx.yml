@@ -159,15 +159,11 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const core = require('@actions/core');
             const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            const exists = releases.some(release => release.tag_name === 'snapshot');
-            core.setOutput('exists', exists);
-            outputs:
-          result: ${{ steps.check_release.outputs.exists }}
+            return releases.some(release => release.tag_name === 'snapshot');
 
 
       - name: Delete existing release
