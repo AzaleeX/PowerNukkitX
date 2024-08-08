@@ -111,19 +111,6 @@ jobs:
           zip -r libs.zip libs
           zip -r powernukkitx-run.zip powernukkitx.jar libs start.sh start.bat start.cmd
 
-      - name: Calculate hashes
-        run: |
-          cd build
-          mkdir -p hash/sha256 hash/md5
-          sha256sum powernukkitx.jar > hash/sha256/powernukkitx.jar.sha256
-          sha256sum libs.tar.gz > hash/sha256/libs.tar.gz.sha256
-          sha256sum libs.zip > hash/sha256/libs.zip.sha256
-          sha256sum powernukkitx-run.zip > hash/sha256/powernukkitx-run.zip.sha256
-          md5sum powernukkitx.jar > hash/md5/powernukkitx.jar.md5
-          md5sum libs.tar.gz > hash/md5/libs.tar.gz.md5
-          md5sum libs.zip > hash/md5/libs.zip.md5
-          md5sum powernukkitx-run.zip > hash/md5/powernukkitx-run.zip.md5
-
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -134,14 +121,6 @@ jobs:
             build/libs.tar.gz
             build/libs.zip
             build/powernukkitx-run.zip
-            build/hash/sha256/powernukkitx.jar.sha256
-            build/hash/sha256/libs.tar.gz.sha256
-            build/hash/sha256/libs.zip.sha256
-            build/hash/sha256/powernukkitx-run.zip.sha256
-            build/hash/md5/powernukkitx.jar.md5
-            build/hash/md5/libs.tar.gz.md5
-            build/hash/md5/libs.zip.md5
-            build/hash/md5/powernukkitx-run.zip.md5
 
   release:
     name: Handle Releases
@@ -163,11 +142,11 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            return releases.some(release => release.tag_name === 'snapshot');
-
+            const exists = releases.some(release => release.tag_name === 'snapshot');
+            return { exists: exists };
 
       - name: Delete existing release
-        if: steps.check_release.outputs.result == 'true'
+        if: steps.check_release.outputs.exists == 'true'
         uses: Xotl/cool-github-releases@v1
         with:
           mode: delete
@@ -176,7 +155,7 @@ jobs:
 
       - name: Ensure build directory exists
         run: mkdir -p build
-        
+
       - name: Verify artifacts exist
         run: |
           ls -l build/
@@ -211,14 +190,6 @@ jobs:
             build/powernukkitx.jar
             build/libs.tar.gz
             build/libs.zip
-            build/hash/sha256/powernukkitx.jar.sha256|text/plain
-            build/hash/sha256/libs.tar.gz.sha256|text/plain
-            build/hash/sha256/libs.zip.sha256|text/plain
-            build/hash/sha256/powernukkitx-run.zip.sha256|text/plain
-            build/hash/md5/powernukkitx.jar.md5|text/plain
-            build/hash/md5/libs.tar.gz.md5|text/plain
-            build/hash/md5/libs.zip.md5|text/plain
-            build/hash/md5/powernukkitx-run.zip.md5|text/plain
           replace_assets: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -231,14 +202,6 @@ jobs:
             build/powernukkitx.jar
             build/libs.tar.gz
             build/libs.zip
-            build/hash/sha256/powernukkitx.jar.sha256
-            build/hash/sha256/libs.tar.gz.sha256
-            build/hash/sha256/libs.zip.sha256
-            build/hash/sha256/powernukkitx-run.zip.sha256
-            build/hash/md5/powernukkitx.jar.md5
-            build/hash/md5/libs.tar.gz.md5
-            build/hash/md5/libs.zip.md5
-            build/hash/md5/powernukkitx-run.zip.md5
           tag: ${{ steps.read_version.outputs.git-build-version }}
           body: ${{ steps.read_version.outputs.git-build-version }} - ${{ github.ref_name }} - ${{ github.sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
