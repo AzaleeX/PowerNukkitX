@@ -187,11 +187,7 @@ jobs:
             4. Enjoy the latest features and bug fixes!
 
             Thank you for using PowerNukkitX ⭐
-          assets: |
-            build/powernukkitx-run.zip
-            build/powernukkitx.jar
-            build/libs.tar.gz
-            build/libs.zip
+          assets: powernukkitx-run.zip|build/powernukkitx-run.zip;powernukkitx.jar|build/powernukkitx.jar;libs.tar.gz|build/libs.tar.gz;libs.zip|build/libs.zip
           replace_assets: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
