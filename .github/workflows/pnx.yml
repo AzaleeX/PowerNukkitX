@@ -105,7 +105,7 @@ jobs:
           mv powernukkitx-${{ steps.read_version.outputs.git-build-version }}-all.jar powernukkitx-shaded.jar
           tar -vczf libs.tar.gz libs
           zip -r libs.zip libs
-          zip -r powernukkitx-run.zip libs powernukkitx.jar start.sh start.bat start.cmd start.ps1
+          zip -r powernukkitx-run.zip libs powernukkitx-shaded.jar start.sh start.bat start.cmd start.ps1
 
       - name: Calculate hashes
         run: |
@@ -187,10 +187,10 @@ jobs:
           body_mrkdwn: |
             This is the **latest version of PowerNukkitX**, built from the latest source.
             (_Please note that the date on GitHub might appear outdated due to certain limitations._)
-            **Corresponding commit:** _<https://github.com/powernukkitx/powernukkitx/commit/${{ github.sha }}>
+            **Corresponding commit:** _<https://github.com/AzaleeX/PowerNukkitX/commit/${{ github.sha }}>
 
             > [!NOTE]
-            > If you encounter any issues, please report them directly on our [Discord](https://discord.gg/apwd7uauZg) or in the [GitHub Issues](https://github.com/powernukkitx/powernukkitx/issues) tab.
+            > If you encounter any issues, please report them directly on our [Discord](https://discord.gg/apwd7uauZg) or in the [GitHub Issues](https://github.com/AzaleeX/PowerNukkitX/issues) tab.
 
             ### How to Update
 
