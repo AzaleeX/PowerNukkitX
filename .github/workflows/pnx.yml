@@ -161,6 +161,8 @@ jobs:
 
       - name: Verify artifacts exist
         run: |
+          pwd
+          ls -l build/
           ls -l build/powernukkitx-run.zip
           ls -l build/powernukkitx.jar
           ls -l build/libs.tar.gz
@@ -175,6 +177,7 @@ jobs:
           ls -l build/hash/md5/powernukkitx.jar.md5
           ls -l build/hash/md5/libs.tar.gz.md5
           ls -l build/hash/md5/libs.zip.md5
+
 
       - name: Release latest build
         uses: Xotl/cool-github-releases@v1
