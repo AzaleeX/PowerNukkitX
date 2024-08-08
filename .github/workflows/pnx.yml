@@ -190,7 +190,7 @@ jobs:
             build/powernukkitx.jar
             build/libs.tar.gz
             build/libs.zip
-          replace_assets: true
+          replace_assets: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release new version
