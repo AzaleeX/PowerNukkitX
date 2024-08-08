@@ -166,7 +166,7 @@ jobs:
         uses: Xotl/cool-github-releases@v1
         if: success() && github.repository == 'AzaleeX/PowerNukkitX' && contains(github.ref_name, 'master')
         with:
-          mode: download
+          mode: update
           isPrerelease: false
           tag_name: snapshot
           release_name: "Latest Snapshot"
@@ -188,7 +188,7 @@ jobs:
 
             Thank you for using PowerNukkitX ⭐
           assets: powernukkitx-run.zip|build/powernukkitx-run.zip;powernukkitx.jar|build/powernukkitx.jar;libs.tar.gz|build/libs.tar.gz;libs.zip|build/libs.zip
-          replace_assets: false
+          replace_assets: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release new version
