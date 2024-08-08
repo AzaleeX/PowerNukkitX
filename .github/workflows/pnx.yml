@@ -111,6 +111,9 @@ jobs:
           zip -r libs.zip libs
           zip -r powernukkitx-run.zip powernukkitx.jar libs start.sh start.bat start.cmd
 
+      - name: List build directory
+        run: ls -l build/
+
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -157,8 +160,7 @@ jobs:
         run: mkdir -p build
 
       - name: Verify artifacts exist
-        run: |
-          ls -l build/
+        run: ls -l build/
 
       - name: Release latest build
         uses: Xotl/cool-github-releases@v1
