@@ -167,6 +167,9 @@ jobs:
           tag_name: snapshot
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Ensure build directory exists
+        run: mkdir -p build
+        
       - name: Verify artifacts exist
         run: |
           ls -l build/
