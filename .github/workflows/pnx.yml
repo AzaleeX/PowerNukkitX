@@ -105,7 +105,7 @@ jobs:
           mv powernukkitx-${{ steps.read_version.outputs.git-build-version }}-all.jar powernukkitx-shaded.jar
           tar -vczf libs.tar.gz libs
           zip -r libs.zip libs
-          zip -r powernukkitx-run.zip libs powernukkitx-shaded.jar start.sh start.bat start.cmd start.ps1
+          zip -r powernukkitx-run.zip libs powernukkitx.jar
 
       - name: Calculate hashes
         run: |
