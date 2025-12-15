@@ -58,11 +58,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: wrapper
-          cache-overwrite-existing: true
-          build-scan-publish: true
-          build-scan-terms-of-service-url: "https://gradle.com/terms-of-service"
-          build-scan-terms-of-service-agree: "yes"
-          arguments: buildForGithubAction --scan
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build PNX Server
+        run: ./gradlew buildForGithubAction --scan
