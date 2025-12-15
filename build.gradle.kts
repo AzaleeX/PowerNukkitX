@@ -23,6 +23,9 @@ plugins {
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
 }
 
+// Constants
+val SHADOW_JAR_TASK = "shadowJar"
+
 // Project configuration
 group = "org.powernukkitx"
 version = "2.0.0-SNAPSHOT"
@@ -144,17 +147,17 @@ tasks.register<DefaultTask>("buildFast") {
 tasks.register<DefaultTask>("buildSkipChores") {
     group = "alpha build"
     description = "Build without documentation and tests"
-    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, "shadowJar")
+    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, SHADOW_JAR_TASK)
 }
 
 tasks.register<DefaultTask>("buildForGithubAction") {
     group = "build"
     description = "Optimized build for CI/CD pipelines (without tests)"
-    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, "shadowJar")
+    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, SHADOW_JAR_TASK)
 }
 
 tasks.build {
-    dependsOn("shadowJar")
+    dependsOn(SHADOW_JAR_TASK)
     group = "alpha build"
 }
 
