@@ -1,5 +1,5 @@
-// Explicit Gradle API imports to fix Kotlin DSL unresolved references
 import java.nio.charset.StandardCharsets
+// Gradle API imports
 import org.gradle.external.javadoc.CoreJavadocOptions
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.bundling.AbstractArchiveTask

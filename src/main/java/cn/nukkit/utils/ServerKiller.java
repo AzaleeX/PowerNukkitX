@@ -8,7 +8,7 @@ import java.util.logging.Logger;
  */
 public class ServerKiller extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger("ServerKiller");
+    private static final Logger LOGGER = Logger.getLogger(ServerKiller.class.getName());
     
     public final long sleepTime;
 
