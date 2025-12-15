@@ -150,12 +150,7 @@ tasks.register<DefaultTask>("buildSkipChores") {
 tasks.register<DefaultTask>("buildForGithubAction") {
     group = "build"
     description = "Optimized build for CI/CD pipelines"
-    dependsOn(tasks.build)
-    doFirst {
-        tasks["delombok"].enabled = false
-        tasks["javadoc"].enabled = false
-        tasks["javadocJar"].enabled = false
-    }
+    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, "shadowJar", "test")
 }
 
 tasks.build {
