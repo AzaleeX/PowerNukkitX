@@ -128,8 +128,6 @@ sourceSets {
 // Optimize resource processing
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    // Enable incremental processing
-    outputs.upToDateWhen { true }
 }
 
 tasks.processTestResources {
@@ -226,9 +224,6 @@ tasks.test {
         showStackTraces = false
     }
     
-    // Enable test result caching
-    outputs.upToDateWhen { false } // Always run tests for reliability
-    
     finalizedBy("jacocoTestReport") // report is always generated after tests run
 }
 
@@ -297,9 +292,6 @@ tasks.named<ShadowJar>("shadowJar") {
     
     // Enable ZIP64 format for large archives (>4GB)
     isZip64 = true
-    
-    // Performance: Don't rebuild if inputs haven't changed
-    outputs.upToDateWhen { true }
 }
 
 tasks.register<Copy>("copyDependencies") {
