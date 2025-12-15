@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for Server utility methods
+ * This test class focuses on testing static utility methods and constants
+ * that don't require a full server instance, improving code coverage.
  */
 public class ServerTest {
 
@@ -15,6 +17,25 @@ public class ServerTest {
             "Admin broadcast channel should be correct");
         assertEquals("nukkit.broadcast.user", Server.BROADCAST_CHANNEL_USERS, 
             "User broadcast channel should be correct");
+    }
+
+    @Test
+    void testGetDefaultDynamicPropertiesGroupUUID() {
+        String uuid = Server.getDefaultDynamicPropertiesGroupUUID();
+        assertNotNull(uuid, "Default DP group UUID should not be null");
+        assertFalse(uuid.isEmpty(), "Default DP group UUID should not be empty");
+    }
+
+    @Test
+    void testGetDynamicPropertiesMaxStringBytes() {
+        int maxBytes = Server.getDynamicPropertiesMaxStringBytes();
+        assertTrue(maxBytes > 0, "Max string bytes should be positive");
+    }
+
+    @Test
+    void testGetDynamicPropertiesNumberAbsMax() {
+        double absMax = Server.getDynamicPropertiesNumberAbsMax();
+        assertTrue(absMax > 0, "Number absolute max should be positive");
     }
 
     @Test
@@ -245,5 +266,63 @@ public class ServerTest {
             assertEquals(3, Server.getDifficultyFromString(str),
                 "String '" + str + "' should map to hard (3)");
         }
+    }
+
+    @Test
+    void testGamemodeAndDifficultyEdgeCases() {
+        // Test edge cases for gamemode conversion
+        assertEquals("UNKNOWN", Server.getGamemodeString(Integer.MIN_VALUE), 
+            "MIN_VALUE gamemode should return UNKNOWN");
+        assertEquals("UNKNOWN", Server.getGamemodeString(Integer.MAX_VALUE), 
+            "MAX_VALUE gamemode should return UNKNOWN");
+        
+        // Test that null input throws NullPointerException
+        assertThrows(NullPointerException.class, () -> {
+            Server.getGamemodeFromString(null);
+        }, "null gamemode string should throw NullPointerException");
+        
+        assertThrows(NullPointerException.class, () -> {
+            Server.getDifficultyFromString(null);
+        }, "null difficulty string should throw NullPointerException");
+    }
+
+    @Test
+    void testGamemodeStringConsistency() {
+        // Test that converting gamemode to string and back works correctly
+        for (int mode = 0; mode <= 3; mode++) {
+            String modeName = Server.getGamemodeString(mode, true);
+            int convertedMode = Server.getGamemodeFromString(modeName);
+            assertEquals(mode, convertedMode, 
+                "Gamemode " + mode + " should convert to string and back consistently");
+        }
+    }
+
+    @Test
+    void testDifficultyStringConsistency() {
+        // Test that converting difficulty to string representation works
+        String[] difficultyNames = {"peaceful", "easy", "normal", "hard"};
+        for (int i = 0; i < difficultyNames.length; i++) {
+            int convertedDifficulty = Server.getDifficultyFromString(difficultyNames[i]);
+            assertEquals(i, convertedDifficulty,
+                "Difficulty '" + difficultyNames[i] + "' should convert to " + i);
+        }
+    }
+
+    @Test
+    void testGetGamemodeFromString_SpecialCharacters() {
+        // Test that special characters and invalid input are handled correctly
+        assertEquals(-1, Server.getGamemodeFromString("!@#$%"), 
+            "Special characters should return -1");
+        assertEquals(-1, Server.getGamemodeFromString("survival123"), 
+            "Invalid string with numbers should return -1");
+    }
+
+    @Test
+    void testGetDifficultyFromString_SpecialCharacters() {
+        // Test that special characters and invalid input are handled correctly
+        assertEquals(-1, Server.getDifficultyFromString("!@#$%"), 
+            "Special characters should return -1");
+        assertEquals(-1, Server.getDifficultyFromString("peaceful123"), 
+            "Invalid string with numbers should return -1");
     }
 }

@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for Nukkit launcher utilities
+ * This test class focuses on testing the Nukkit launcher constants,
+ * static utility methods, and configuration, improving code coverage.
  */
 public class NukkitTest {
 
