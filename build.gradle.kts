@@ -255,7 +255,7 @@ tasks.named<org.gradle.jvm.tasks.Jar>("jar") {
 }
 
 // Shadow JAR configuration for creating fat JAR with all dependencies
-tasks.named<ShadowJar>("shadowJar") {
+tasks.named<ShadowJar>(SHADOW_JAR_TASK) {
     dependsOn("copyDependencies")
     archiveClassifier.set("shaded")
     
