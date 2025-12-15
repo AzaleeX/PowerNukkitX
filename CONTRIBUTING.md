@@ -51,15 +51,24 @@ Scan through our [existing issues](https://github.com/PowerNukkitX/PowerNukkitX/
 
 **Build Tips:**
 - Use `./gradlew tasks` to see all available build tasks
-- The project uses parallel builds, configuration cache, and incremental compilation for speed
-- Build tasks are optimized for different scenarios:
+- The project uses advanced build optimizations:
+  - **Parallel execution**: Tasks and tests run in parallel using available CPU cores
+  - **Configuration cache**: Dramatically faster build configuration (experimental)
+  - **Incremental compilation**: Only recompiles changed files
+  - **Forked compilation**: Separate JVM process for compilation with optimized memory
+  - **Dependency caching**: Smart caching of dynamic and changing modules
+  - **Resource optimization**: Incremental resource processing
+- Build tasks optimized for different scenarios:
   - `buildFast`: Fastest - only compiles and creates JAR (no tests, no documentation)
   - `buildSkipChores`: Fast - includes shadowJar but skips tests and documentation
   - `build`: Full build with tests and all artifacts
   - `buildForGithubAction`: Optimized for CI/CD pipelines
-- For CI/CD, use `buildForGithubAction` task
-- Tests run in parallel automatically using available CPU cores
-- The build system uses Gradle 8.10+ with performance optimizations enabled
+- Performance features:
+  - Tests run in parallel with automatic JVM forking every 100 tests
+  - Compiler uses separate JVM with 2GB heap for main code, 1GB for tests
+  - Gradle daemon uses 4GB heap with G1GC and string deduplication
+  - Maximum 8 parallel workers for optimal CPU utilization
+- The build system uses Gradle 8.10+ with all performance optimizations enabled
 
 ### Pull Request
 

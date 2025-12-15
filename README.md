@@ -109,10 +109,16 @@ If you want to build PowerNukkitX from source:
    ```
 
 **Build Performance Notes:**
-- The project uses Gradle configuration cache and parallel execution for faster builds
-- Tests run in parallel using all available CPU cores
-- Incremental compilation is enabled for faster rebuilds
-- First build will take longer to download dependencies
+- The project uses advanced Gradle optimizations:
+  - **Configuration cache** and **parallel execution** for maximum speed
+  - **Incremental compilation** with forked compiler processes (2GB heap for main, 1GB for tests)
+  - **Parallel test execution** with automatic JVM forking every 100 tests to prevent memory issues
+  - **Smart dependency caching** for dynamic and changing modules (10 min cache)
+  - **G1GC with string deduplication** for efficient memory management
+  - Maximum **8 parallel workers** for optimal CPU utilization
+- First build downloads dependencies and takes longer (cached afterward)
+- Subsequent builds are significantly faster due to caching and incremental processing
+- The Gradle daemon uses 4GB heap for large projects
 
 ## Community & Support
 Join our [Discord](https://discord.gg/apwd7uauZg) server to chat with other users and developers.

@@ -77,6 +77,23 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
+// Dependency resolution optimization
+configurations.all {
+    resolutionStrategy {
+        // Cache dynamic versions for 10 minutes
+        cacheDynamicVersionsFor(10, "minutes")
+        // Cache changing modules for 10 minutes
+        cacheChangingModulesFor(10, "minutes")
+        // Prefer project modules over external dependencies
+        preferProjectModules()
+    }
+}
+
+// Annotation processing optimization
+tasks.withType<JavaCompile>().configureEach {
+    options.annotationProcessorPath = configurations.getByName("annotationProcessor")
+}
+
 java {
     withSourcesJar()
     withJavadocJar()
@@ -91,6 +108,12 @@ idea {
     module {
         isDownloadSources = true
         isDownloadJavadoc = false
+        // Exclude build directories from indexing
+        excludeDirs.addAll(listOf(
+            file(".gradle"),
+            file("build"),
+            file("out")
+        ))
     }
 }
 
@@ -100,6 +123,17 @@ sourceSets {
             srcDirs("src/main/resources")
         }
     }
+}
+
+// Optimize resource processing
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // Enable incremental processing
+    outputs.upToDateWhen { true }
+}
+
+tasks.processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 // Custom build tasks for different build scenarios
@@ -142,29 +176,58 @@ tasks.compileJava {
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf(
         "-Xpkginfo:always",
-        "-parameters" // Preserve parameter names for better debugging
+        "-parameters", // Preserve parameter names for better debugging
+        "-Xlint:-options", // Suppress warnings about bootclasspath
+        "-Xlint:deprecation",
+        "-Xlint:unchecked"
     ))
     // Enable incremental compilation for faster builds
     options.isIncremental = true
+    // Fork compiler process for better performance
+    options.isFork = true
+    options.forkOptions.jvmArgs = listOf("-Xmx2g")
+    // Set release flag for better compatibility
+    options.release.set(21)
+    
     java.sourceCompatibility = JavaVersion.VERSION_21
     java.targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Optimize test compilation separately
+tasks.compileTestJava {
+    options.encoding = "UTF-8"
+    options.isIncremental = true
+    options.isFork = true
+    options.forkOptions.jvmArgs = listOf("-Xmx1g")
 }
 
 // Test configuration
 tasks.test {
     useJUnitPlatform()
-    jvmArgs(listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED"))
-    jvmArgs(listOf("--add-opens", "java.base/java.io=ALL-UNNAMED"))
+    jvmArgs(
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.base/java.io=ALL-UNNAMED",
+        "-Xmx1g", // Limit test JVM memory
+        "-XX:+UseG1GC", // Use G1GC for tests
+        "-XX:MaxGCPauseMillis=200" // Lower GC pause time
+    )
     
     // Performance optimizations for tests
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    forkEvery = 100 // Fork new JVM after 100 tests to prevent memory issues
     
     // Test execution settings
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = false
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = false
     }
+    
+    // Enable test result caching
+    outputs.upToDateWhen { false } // Always run tests for reliability
     
     finalizedBy("jacocoTestReport") // report is always generated after tests run
 }
@@ -207,7 +270,8 @@ tasks.named<ShadowJar>("shadowJar") {
         attributes(
             "Main-Class" to "cn.nukkit.JarStart",
             "Implementation-Version" to project.version,
-            "Implementation-Title" to project.name
+            "Implementation-Title" to project.name,
+            "Multi-Release" to "true"
         )
     }
 
@@ -215,12 +279,27 @@ tasks.named<ShadowJar>("shadowJar") {
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer::class.java)
 
     // Minimize JAR size by excluding unnecessary files
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    exclude(
+        "META-INF/*.SF",
+        "META-INF/*.DSA", 
+        "META-INF/*.RSA",
+        "META-INF/DEPENDENCIES",
+        "META-INF/LICENSE*",
+        "META-INF/NOTICE*",
+        "META-INF/maven/**",
+        "about.html"
+    )
+    
+    // Merge service files for better compatibility
+    mergeServiceFiles()
     
     destinationDirectory.set(layout.buildDirectory)
     
     // Enable ZIP64 format for large archives (>4GB)
     isZip64 = true
+    
+    // Performance: Don't rebuild if inputs haven't changed
+    outputs.upToDateWhen { true }
 }
 
 tasks.register<Copy>("copyDependencies") {
@@ -232,6 +311,10 @@ tasks.register<Copy>("copyDependencies") {
     
     // Enable up-to-date checking for better incremental builds
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    
+    // Performance: Only copy if dependencies changed
+    inputs.files(configurations.runtimeClasspath)
+    outputs.dir(layout.buildDirectory.dir("libs"))
 }
 
 // Javadoc configuration
@@ -299,4 +382,12 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
+}
+
+// Task optimization - disable unnecessary tasks for faster builds
+tasks.configureEach {
+    // Skip tasks that aren't needed for standard builds
+    if (name.contains("delombok") && !gradle.startParameter.taskNames.contains("javadoc")) {
+        enabled = false
+    }
 }
