@@ -8,6 +8,8 @@ jobs:
   move-tag:
     name: Move snapshot tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && contains(github.ref_name, 'master')
     steps:
       - name: Move CI tag
@@ -23,6 +25,8 @@ jobs:
   check-files:
     name: Check repository files
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)
     outputs:
       changed-files: ${{ steps.check-changed-files.outputs.all_changed_and_modified_files }}
@@ -44,6 +48,8 @@ jobs:
     name: Build and Publish PNX
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [move-tag, check-files]
     if: |
       (github.event_name == 'push' || 

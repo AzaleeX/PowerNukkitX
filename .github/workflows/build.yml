@@ -8,6 +8,8 @@ jobs:
   check-files:
     name: Check repository files
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)
     outputs:
       changed-files: ${{ steps.check-changed-files.outputs.all_changed_and_modified_files }}
@@ -29,6 +31,8 @@ jobs:
     name: Build PNX Server
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [check-files]
     if: |
       (github.event_name == 'push' || 
