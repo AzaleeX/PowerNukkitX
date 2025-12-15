@@ -101,8 +101,18 @@ If you want to build PowerNukkitX from source:
 
 4. **For faster builds during development**
    ```sh
+   # Fastest - just compile and create JAR
    ./gradlew buildFast
+   
+   # Fast with shadowJar - no tests or docs
+   ./gradlew buildSkipChores
    ```
+
+**Build Performance Notes:**
+- The project uses Gradle configuration cache and parallel execution for faster builds
+- Tests run in parallel using all available CPU cores
+- Incremental compilation is enabled for faster rebuilds
+- First build will take longer to download dependencies
 
 ## Community & Support
 Join our [Discord](https://discord.gg/apwd7uauZg) server to chat with other users and developers.

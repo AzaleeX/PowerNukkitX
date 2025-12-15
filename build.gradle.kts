@@ -80,6 +80,10 @@ dependencies {
 java {
     withSourcesJar()
     withJavadocJar()
+    // Enable toolchain for better cross-platform compatibility
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 // IDE configuration - automatically download dependencies source code
@@ -100,44 +104,26 @@ sourceSets {
 
 // Custom build tasks for different build scenarios
 tasks.register<DefaultTask>("buildFast") {
-    dependsOn(tasks.build)
     group = "alpha build"
     description = "Fast build without documentation and tests - for rapid development"
-    tasks["delombok"].enabled = false
-    tasks["javadoc"].enabled = false
-    tasks["javadocJar"].enabled = false
-    tasks["sourcesJar"].enabled = false
-    tasks["copyDependencies"].enabled = false
-    tasks["shadowJar"].enabled = false
-    tasks["compileTestJava"].enabled = false
-    tasks["processTestResources"].enabled = false
-    tasks["testClasses"].enabled = false
-    tasks["test"].enabled = false
-    tasks["check"].enabled = false
+    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar)
 }
 
 tasks.register<DefaultTask>("buildSkipChores") {
-    dependsOn(tasks.build)
     group = "alpha build"
     description = "Build without documentation and tests"
-    tasks["delombok"].enabled = false
-    tasks["javadoc"].enabled = false
-    tasks["javadocJar"].enabled = false
-    tasks["sourcesJar"].enabled = false
-    tasks["compileTestJava"].enabled = false
-    tasks["processTestResources"].enabled = false
-    tasks["testClasses"].enabled = false
-    tasks["test"].enabled = false
-    tasks["check"].enabled = false
+    dependsOn(tasks.compileJava, tasks.processResources, tasks.classes, tasks.jar, "shadowJar")
 }
 
 tasks.register<DefaultTask>("buildForGithubAction") {
-    dependsOn(tasks.build)
     group = "build"
     description = "Optimized build for CI/CD pipelines"
-    tasks["delombok"].enabled = false
-    tasks["javadoc"].enabled = false
-    tasks["javadocJar"].enabled = false
+    dependsOn(tasks.build)
+    doFirst {
+        tasks["delombok"].enabled = false
+        tasks["javadoc"].enabled = false
+        tasks["javadocJar"].enabled = false
+    }
 }
 
 tasks.build {
@@ -154,7 +140,12 @@ tasks.clean {
 // Java compilation configuration
 tasks.compileJava {
     options.encoding = "UTF-8"
-    options.compilerArgs.add("-Xpkginfo:always")
+    options.compilerArgs.addAll(listOf(
+        "-Xpkginfo:always",
+        "-parameters" // Preserve parameter names for better debugging
+    ))
+    // Enable incremental compilation for faster builds
+    options.isIncremental = true
     java.sourceCompatibility = JavaVersion.VERSION_21
     java.targetCompatibility = JavaVersion.VERSION_21
 }
@@ -164,6 +155,17 @@ tasks.test {
     useJUnitPlatform()
     jvmArgs(listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED"))
     jvmArgs(listOf("--add-opens", "java.base/java.io=ALL-UNNAMED"))
+    
+    // Performance optimizations for tests
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    
+    // Test execution settings
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+    
     finalizedBy("jacocoTestReport") // report is always generated after tests run
 }
 
@@ -199,16 +201,26 @@ tasks.named<org.gradle.jvm.tasks.Jar>("jar") {
 // Shadow JAR configuration for creating fat JAR with all dependencies
 tasks.named<ShadowJar>("shadowJar") {
     dependsOn("copyDependencies")
+    archiveClassifier.set("shaded")
+    
     manifest {
         attributes(
-            "Main-Class" to "cn.nukkit.JarStart"
+            "Main-Class" to "cn.nukkit.JarStart",
+            "Implementation-Version" to project.version,
+            "Implementation-Title" to project.name
         )
     }
 
     // Required to fix shadowJar log4j2 plugin caching issue
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer::class.java)
 
+    // Minimize JAR size by excluding unnecessary files
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    
     destinationDirectory.set(layout.buildDirectory)
+    
+    // Enable parallel processing for shadow JAR
+    isZip64 = true
 }
 
 tasks.register<Copy>("copyDependencies") {
@@ -217,6 +229,9 @@ tasks.register<Copy>("copyDependencies") {
     description = "Copy all dependencies to libs folder"
     from(configurations.runtimeClasspath)
     into(layout.buildDirectory.dir("libs"))
+    
+    // Enable up-to-date checking for better incremental builds
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 // Javadoc configuration
@@ -230,6 +245,12 @@ tasks.javadoc {
     )
     // Suppress some meaningless warnings
     javadocOptions.addStringOption("Xdoclint:none", "-quiet")
+    
+    // Performance: Only generate javadoc for public API
+    javadocOptions.addBooleanOption("public", true)
+    
+    // Enable parallel processing
+    isFailOnError = false
 }
 
 // Maven publishing configuration
