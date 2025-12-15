@@ -219,7 +219,7 @@ tasks.named<ShadowJar>("shadowJar") {
     
     destinationDirectory.set(layout.buildDirectory)
     
-    // Enable parallel processing for shadow JAR
+    // Enable ZIP64 format for large archives (>4GB)
     isZip64 = true
 }
 
