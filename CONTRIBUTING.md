@@ -36,7 +36,7 @@ Scan through our [existing issues](https://github.com/PowerNukkitX/PowerNukkitX/
 2. Install **JDK21** or higher.
 3. Make some changes.
 4. Build and test your changes:
-   - **First build**: Use `buildSkipChores` task to build without running tests initially
+   - **First build**: Use `buildSkipChores` task to build without tests
    - **Quick iteration**: Use `buildFast` task for rapid development cycles
    - **Clean build**: Use `clean` task to remove all build artifacts
    - **Full build**: Use `build` task for complete build with tests

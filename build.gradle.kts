@@ -119,7 +119,7 @@ tasks.register<DefaultTask>("buildFast") {
 tasks.register<DefaultTask>("buildSkipChores") {
     dependsOn(tasks.build)
     group = "alpha build"
-    description = "Build without documentation but with tests"
+    description = "Build without documentation and tests"
     tasks["delombok"].enabled = false
     tasks["javadoc"].enabled = false
     tasks["javadocJar"].enabled = false
