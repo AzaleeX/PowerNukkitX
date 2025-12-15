@@ -74,6 +74,36 @@ java -jar --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java
 ```
 If you use a newer java version (greater than 21) you have to use one of the [startup scripts.](https://github.com/PowerNukkitX/scripts/tree/master)
 
+## Building from Source
+
+If you want to build PowerNukkitX from source:
+
+1. **Prerequisites**
+   - JDK 21 or higher
+   - Git
+
+2. **Clone the repository**
+   ```sh
+   git clone https://github.com/PowerNukkitX/PowerNukkitX.git
+   cd PowerNukkitX
+   ```
+
+3. **Build the project**
+   ```sh
+   # On Windows
+   gradlew.bat build
+   
+   # On Linux/Mac
+   ./gradlew build
+   ```
+   
+   The compiled JAR will be in the `build` directory.
+
+4. **For faster builds during development**
+   ```sh
+   ./gradlew buildFast
+   ```
+
 ## Community & Support
 Join our [Discord](https://discord.gg/apwd7uauZg) server to chat with other users and developers.
 

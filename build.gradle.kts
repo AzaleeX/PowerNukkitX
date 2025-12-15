@@ -1,5 +1,5 @@
-import java.nio.charset.StandardCharsets
 // Explicit Gradle API imports to fix Kotlin DSL unresolved references
+import java.nio.charset.StandardCharsets
 import org.gradle.external.javadoc.CoreJavadocOptions
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
@@ -23,16 +23,22 @@ plugins {
     id("com.gorylenko.gradle-git-properties") version "2.4.1"
 }
 
+// Project configuration
 group = "org.powernukkitx"
 version = "2.0.0-SNAPSHOT"
 description = "PNX Server"
 java.sourceCompatibility = JavaVersion.VERSION_21
 java.targetCompatibility = JavaVersion.VERSION_21
 
-
+// Dependencies configuration
 dependencies {
+    // Networking
     api(libs.bundles.netty)
+    
+    // Logging
     api(libs.bundles.logging)
+    
+    // Core libraries
     api(libs.annotations)
     api(libs.jsr305)
     api(libs.gson)
@@ -42,7 +48,10 @@ dependencies {
     api(libs.snakeyaml)
     api(libs.stateless4j)
 
+    // Database and storage
     implementation(libs.bundles.leveldb)
+    
+    // Utilities
     implementation(libs.rng.simple)
     implementation(libs.rng.sampling)
     implementation(libs.asm)
@@ -56,10 +65,12 @@ dependencies {
     implementation(libs.bundles.terminal)
     implementation(libs.okaeri)
 
+    // Testing
     testImplementation(libs.bundles.test)
     testImplementation(libs.commonsio)
     testImplementation(libs.commonslang3)
 
+    // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     testCompileOnly(libs.lombok)
@@ -71,7 +82,7 @@ java {
     withJavadocJar()
 }
 
-//Automatically download dependencies source code
+// IDE configuration - automatically download dependencies source code
 idea {
     module {
         isDownloadSources = true
@@ -87,9 +98,11 @@ sourceSets {
     }
 }
 
+// Custom build tasks for different build scenarios
 tasks.register<DefaultTask>("buildFast") {
     dependsOn(tasks.build)
     group = "alpha build"
+    description = "Fast build without documentation and tests - for rapid development"
     tasks["delombok"].enabled = false
     tasks["javadoc"].enabled = false
     tasks["javadocJar"].enabled = false
@@ -106,6 +119,7 @@ tasks.register<DefaultTask>("buildFast") {
 tasks.register<DefaultTask>("buildSkipChores") {
     dependsOn(tasks.build)
     group = "alpha build"
+    description = "Build without documentation but with tests"
     tasks["delombok"].enabled = false
     tasks["javadoc"].enabled = false
     tasks["javadocJar"].enabled = false
@@ -120,6 +134,7 @@ tasks.register<DefaultTask>("buildSkipChores") {
 tasks.register<DefaultTask>("buildForGithubAction") {
     dependsOn(tasks.build)
     group = "build"
+    description = "Optimized build for CI/CD pipelines"
     tasks["delombok"].enabled = false
     tasks["javadoc"].enabled = false
     tasks["javadocJar"].enabled = false
@@ -132,9 +147,11 @@ tasks.build {
 
 tasks.clean {
     group = "alpha build"
+    description = "Deletes the build directory and generated files"
     delete("pnx.yml", "terra", "services")
 }
 
+// Java compilation configuration
 tasks.compileJava {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xpkginfo:always")
@@ -142,6 +159,7 @@ tasks.compileJava {
     java.targetCompatibility = JavaVersion.VERSION_21
 }
 
+// Test configuration
 tasks.test {
     useJUnitPlatform()
     jvmArgs(listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED"))
@@ -149,6 +167,7 @@ tasks.test {
     finalizedBy("jacocoTestReport") // report is always generated after tests run
 }
 
+// Code coverage configuration
 tasks.named<JacocoReport>("jacocoTestReport") {
     reports {
         csv.required = false
@@ -177,6 +196,7 @@ tasks.named<org.gradle.jvm.tasks.Jar>("jar") {
     archiveFileName.set("${project.description}.jar")
 }
 
+// Shadow JAR configuration for creating fat JAR with all dependencies
 tasks.named<ShadowJar>("shadowJar") {
     dependsOn("copyDependencies")
     manifest {
@@ -185,7 +205,8 @@ tasks.named<ShadowJar>("shadowJar") {
         )
     }
 
-    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer::class.java) //required to fix shadowJar log4j2 issue
+    // Required to fix shadowJar log4j2 plugin caching issue
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer::class.java)
 
     destinationDirectory.set(layout.buildDirectory)
 }
@@ -198,6 +219,7 @@ tasks.register<Copy>("copyDependencies") {
     into(layout.buildDirectory.dir("libs"))
 }
 
+// Javadoc configuration
 tasks.javadoc {
     options.encoding = StandardCharsets.UTF_8.name()
     includes.add("**/**.java")
@@ -210,6 +232,7 @@ tasks.javadoc {
     javadocOptions.addStringOption("Xdoclint:none", "-quiet")
 }
 
+// Maven publishing configuration
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -248,8 +271,7 @@ publishing {
     }
 }
 
-
-
+// Encoding configuration for all tasks
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }

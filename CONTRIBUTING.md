@@ -33,14 +33,27 @@ Scan through our [existing issues](https://github.com/PowerNukkitX/PowerNukkitX/
 1. Fork the repository.
     - [Fork the repo](https://www.jetbrains.com/help/idea/fork-github-projects.html#fork)
     - [Clone your fork](https://www.jetbrains.com/help/idea/manage-projects-hosted-on-github.html#clone-from-GitHub)
-2. Install **JDK21**.
+2. Install **JDK21** or higher.
 3. Make some changes.
-4. First build the project using `buildSkipChores` task  
-   Apply changes using `buildFast` task  
-   Clean build folder using `clean` task  
+4. Build and test your changes:
+   - **First build**: Use `buildSkipChores` task to build without running tests initially
+   - **Quick iteration**: Use `buildFast` task for rapid development cycles
+   - **Clean build**: Use `clean` task to remove all build artifacts
+   - **Full build**: Use `build` task for complete build with tests
+   
    <img alt="build.png"  src=".github/img/001.png" width="250px"/>
-5. Start the server to preview your changes.  
+   
+5. Verify your changes work correctly:
+   - Run relevant tests to ensure you haven't broken anything
+   - Start the server to preview your changes
+   
    <img alt="img.png" height="100" src=".github/img/002.png"/>
+
+**Build Tips:**
+- Use `./gradlew tasks` to see all available build tasks
+- Enable parallel builds by ensuring `org.gradle.parallel=true` in gradle.properties (already enabled)
+- The project uses configuration cache for faster builds
+- For CI/CD, use `buildForGithubAction` task
 
 ### Pull Request
 

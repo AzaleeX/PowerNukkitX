@@ -1,12 +1,15 @@
 package cn.nukkit.utils;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * @author MagicDroidX (Nukkit Project)
  */
 public class ServerKiller extends Thread {
 
+    private static final Logger LOGGER = Logger.getLogger("ServerKiller");
+    
     public final long sleepTime;
 
     public ServerKiller(long time) {
@@ -23,12 +26,12 @@ public class ServerKiller extends Thread {
     public void run() {
         try {
             sleep(sleepTime);
-            System.out.println("\nTook too long to stop, server was killed forcefully!\n");
+            LOGGER.severe("Took too long to stop, server was killed forcefully!");
             System.exit(1);
         } catch (InterruptedException e) {
             // The thread was interrupted, which might mean that Ctrl+C was pressed
             // Support Ctrl+C
-            System.out.println("\nServer stopping process was interrupted. Killing server...\n");
+            LOGGER.severe("Server stopping process was interrupted. Killing server...");
             System.exit(1);
         }
     }
