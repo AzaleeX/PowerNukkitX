@@ -290,10 +290,8 @@ public class Server {
         String chooseLanguage = null;
         if (!config.exists()) {
             // Use the new SetupWizard with JLine for better user experience
-            try {
-                SetupWizard wizard = new SetupWizard();
+            try (SetupWizard wizard = new SetupWizard()) {
                 chooseLanguage = wizard.run(predefinedLanguage);
-                wizard.close();
             } catch (IOException e) {
                 log.error("Failed to initialize setup wizard", e);
                 // Fallback to default language

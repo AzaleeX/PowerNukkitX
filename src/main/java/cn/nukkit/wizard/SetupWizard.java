@@ -16,9 +16,10 @@ import java.util.*;
 /**
  * Interactive setup wizard using JLine for better user experience.
  * Provides language selection and configuration options with navigation and auto-completion.
+ * Implements AutoCloseable for proper resource management.
  */
 @Slf4j
-public class SetupWizard {
+public class SetupWizard implements AutoCloseable {
     private final Terminal terminal;
     private final LineReader reader;
     private final Map<String, String> availableLanguages;
@@ -194,12 +195,20 @@ public class SetupWizard {
 
     /**
      * Validates if the given language code exists.
+     * Includes security check to prevent path traversal attacks.
      *
      * @param languageCode Language code to validate
      * @return true if valid, false otherwise
      */
     private boolean validateLanguage(String languageCode) {
         if (languageCode == null || languageCode.isEmpty()) {
+            return false;
+        }
+
+        // Security: prevent path traversal attacks by validating the language code format
+        // Language codes should only contain lowercase letters (3 characters typically)
+        if (!languageCode.matches("^[a-z]{3}$")) {
+            log.warn("Invalid language code format (must be 3 lowercase letters): {}", languageCode);
             return false;
         }
 
