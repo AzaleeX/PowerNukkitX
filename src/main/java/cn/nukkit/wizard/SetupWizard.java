@@ -57,19 +57,19 @@ public class SetupWizard {
                 throw new IllegalStateException("language/language.list is missing. If you are running a development version, make sure you have run 'git submodule update --init'.");
             }
 
-            Scanner scanner = new Scanner(languageList);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine().trim();
-                if (line.isEmpty()) continue;
+            try (Scanner scanner = new Scanner(languageList)) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine().trim();
+                    if (line.isEmpty()) continue;
 
-                String[] parts = line.split("=>");
-                if (parts.length == 2) {
-                    String code = parts[0].trim();
-                    String name = parts[1].trim();
-                    languages.put(code, name);
+                    String[] parts = line.split("=>");
+                    if (parts.length == 2) {
+                        String code = parts[0].trim();
+                        String name = parts[1].trim();
+                        languages.put(code, name);
+                    }
                 }
             }
-            scanner.close();
         } catch (Exception e) {
             log.error("Failed to load language list", e);
             // Fallback to English
@@ -261,8 +261,9 @@ public class SetupWizard {
         @Override
         public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
             String word = line.word();
+            String wordLower = word.toLowerCase();
             for (String langCode : languageCodes) {
-                if (langCode.startsWith(word.toLowerCase())) {
+                if (langCode.startsWith(wordLower)) {
                     candidates.add(new Candidate(langCode));
                 }
             }
