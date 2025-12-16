@@ -68,11 +68,11 @@ public class SetupWizard implements AutoCloseable {
     }
 
     public SetupWizard() throws IOException {
-        // Initialize JLine terminal with fallback to dumb terminal
+        // Initialize JLine terminal - try system terminal first
+        // Only fallback to dumb terminal if absolutely necessary
         this.terminal = TerminalBuilder.builder()
                 .system(true)
-                .dumb(true)  // Allow dumb terminal as fallback
-                .jna(false)   // Disable JNA to avoid issues
+                .jna(false)   // Disable JNA to avoid some issues
                 .build();
 
         // Load available languages
@@ -130,8 +130,16 @@ public class SetupWizard implements AutoCloseable {
      */
     public WizardConfig run(String predefinedLanguage, boolean forceSkip) {
         try {
-            // Check if terminal is interactive (not dumb)
-            boolean isInteractive = !terminal.getType().equals("dumb");
+            // Check if terminal is truly interactive
+            // A terminal is considered interactive if it's not dumb AND has input/output capability
+            String termType = terminal.getType();
+            boolean isInteractive = !termType.equals("dumb") && System.console() != null;
+            
+            // If we don't have System.console() but terminal type is not dumb, still try interactive
+            // This handles cases where the console is available but System.console() returns null
+            if (!isInteractive && !termType.equals("dumb")) {
+                isInteractive = true;
+            }
             
             // Step 1: Language selection (mandatory)
             String selectedLanguage;

@@ -252,7 +252,7 @@ public class Server {
     private List<ExperimentEntry> experiments;
     ///
 
-    Server(final String filePath, String dataPath, String pluginPath, String predefinedLanguage, boolean skipSetup) {
+    Server(final String filePath, String dataPath, String pluginPath, String predefinedLanguage, SetupWizard.WizardConfig wizardConfig) {
         Preconditions.checkState(instance == null, "Already initialized!");
         launchTime = System.currentTimeMillis();
         currentThread = Thread.currentThread(); // Saves the current thread instance as a reference, used in Server#isPrimaryThread()
@@ -288,25 +288,18 @@ public class Server {
 
         File config = new File(this.dataPath + "pnx.yml");
         String chooseLanguage = null;
-        SetupWizard.WizardConfig wizardConfig = null;
         
         if (!config.exists()) {
-            // If skipSetup is true or we have a predefined language, skip the interactive wizard
-            if (skipSetup || (predefinedLanguage != null && !predefinedLanguage.isEmpty())) {
-                // Use defaults or predefined language
-                chooseLanguage = (predefinedLanguage != null && !predefinedLanguage.isEmpty()) ? predefinedLanguage : "eng";
-                log.info("Setup wizard skipped. Using language: {}", chooseLanguage);
+            // Config doesn't exist - use wizard config if provided, otherwise use predefined or default
+            if (wizardConfig != null) {
+                chooseLanguage = wizardConfig.getLanguage();
+                log.info("Using language from setup wizard: {}", chooseLanguage);
+            } else if (predefinedLanguage != null && !predefinedLanguage.isEmpty()) {
+                chooseLanguage = predefinedLanguage;
+                log.info("Using predefined language: {}", chooseLanguage);
             } else {
-                // Try to use the interactive SetupWizard
-                try (SetupWizard wizard = new SetupWizard()) {
-                    wizardConfig = wizard.run(predefinedLanguage, skipSetup);
-                    chooseLanguage = wizardConfig.getLanguage();
-                } catch (Exception e) {
-                    log.warn("Failed to initialize interactive setup wizard: {}", e.getMessage());
-                    log.info("Using default configuration. You can reconfigure by deleting pnx.yml and restarting.");
-                    // Fallback to default language
-                    chooseLanguage = "eng";
-                }
+                chooseLanguage = "eng";
+                log.info("Using default language: eng");
             }
         } else {
             Config configInstance = new Config(config);
