@@ -68,11 +68,12 @@ public class SetupWizard implements AutoCloseable {
     }
 
     public SetupWizard() throws IOException {
-        // Initialize JLine terminal - try system terminal first
-        // Only fallback to dumb terminal if absolutely necessary
+        // Initialize JLine terminal
+        // Allow dumb terminal and try to be as interactive as possible
         this.terminal = TerminalBuilder.builder()
                 .system(true)
-                .jna(false)   // Disable JNA to avoid some issues
+                .jna(false)
+                .dumb(true)  // Allow dumb terminal as fallback but still try to be interactive
                 .build();
 
         // Load available languages
@@ -130,40 +131,17 @@ public class SetupWizard implements AutoCloseable {
      */
     public WizardConfig run(String predefinedLanguage, boolean forceSkip) {
         try {
-            // Check if terminal is truly interactive
-            // A terminal is considered interactive if it's not dumb AND has input/output capability
-            String termType = terminal.getType();
-            boolean isInteractive = !termType.equals("dumb") && System.console() != null;
-            
-            // If we don't have System.console() but terminal type is not dumb, still try interactive
-            // This handles cases where the console is available but System.console() returns null
-            if (!isInteractive && !termType.equals("dumb")) {
-                isInteractive = true;
-            }
-            
             // Step 1: Language selection (mandatory)
-            String selectedLanguage;
-            if (!isInteractive && predefinedLanguage == null) {
-                // Non-interactive environment without predefined language - use default
-                selectedLanguage = "eng";
-                log.info("Non-interactive environment detected. Using default language: eng");
-            } else {
-                selectedLanguage = selectLanguage(predefinedLanguage);
-            }
+            String selectedLanguage = selectLanguage(predefinedLanguage);
             wizardConfig.setLanguage(selectedLanguage);
 
-            // Step 2: If forceSkip is true or non-interactive, skip everything
+            // Step 2: If forceSkip is true, skip everything
             if (forceSkip) {
                 skipWizard = true;
-                if (isInteractive) {
-                    terminal.writer().println("Setup wizard skipped via command line flag. Using default configuration.");
-                    terminal.writer().flush();
-                }
-            } else if (!isInteractive) {
-                skipWizard = true;
-                log.info("Non-interactive environment detected. Using default configuration.");
+                terminal.writer().println("Setup wizard skipped via command line flag. Using default configuration.");
+                terminal.writer().flush();
             } else {
-                // Ask if user wants to skip the wizard
+                // Always try to ask if user wants to skip the wizard
                 askSkipWizard();
                 
                 // Step 3: If not skipping, ask additional configuration questions
