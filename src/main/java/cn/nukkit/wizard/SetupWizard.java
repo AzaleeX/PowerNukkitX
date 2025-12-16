@@ -166,11 +166,9 @@ public class SetupWizard implements AutoCloseable {
      */
     private String selectLanguage(String predefinedLanguage) {
         terminal.writer().println();
-        terminal.writer().println("╔══════════════════════════════════════════════════════════╗");
-        terminal.writer().println("║                                                          ║");
-        terminal.writer().println("║          PowerNukkitX Setup Wizard                       ║");
-        terminal.writer().println("║                                                          ║");
-        terminal.writer().println("╚══════════════════════════════════════════════════════════╝");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("          PowerNukkitX Setup Wizard");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
         terminal.writer().println();
         terminal.writer().println("Welcome! Please choose a language first!");
         terminal.writer().println();
@@ -260,9 +258,10 @@ public class SetupWizard implements AutoCloseable {
      * Asks the user if they want to skip the setup wizard.
      */
     private void askSkipWizard() {
-        terminal.writer().println("╔══════════════════════════════════════════════════════════╗");
-        terminal.writer().println("║          Additional Setup Configuration                  ║");
-        terminal.writer().println("╚══════════════════════════════════════════════════════════╝");
+        terminal.writer().println();
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("          Additional Setup Configuration");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
         terminal.writer().println();
         terminal.writer().flush();
 
@@ -298,9 +297,10 @@ public class SetupWizard implements AutoCloseable {
      * Configures server settings through interactive prompts.
      */
     private void configureServer() {
-        terminal.writer().println("╔══════════════════════════════════════════════════════════╗");
-        terminal.writer().println("║              Server Configuration                        ║");
-        terminal.writer().println("╚══════════════════════════════════════════════════════════╝");
+        terminal.writer().println();
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("              Server Configuration");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
         terminal.writer().println();
         terminal.writer().flush();
         
@@ -323,9 +323,9 @@ public class SetupWizard implements AutoCloseable {
         configureOperators();
         
         terminal.writer().println();
-        terminal.writer().println("╔══════════════════════════════════════════════════════════╗");
-        terminal.writer().println("║          Configuration Complete!                         ║");
-        terminal.writer().println("╚══════════════════════════════════════════════════════════╝");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("          Configuration Complete!");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
         terminal.writer().println();
         terminal.writer().println("✓ Your server will start with these settings.");
         terminal.writer().println();
