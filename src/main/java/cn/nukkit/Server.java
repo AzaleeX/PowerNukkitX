@@ -291,14 +291,22 @@ public class Server {
         SetupWizard.WizardConfig wizardConfig = null;
         
         if (!config.exists()) {
-            // Use the new SetupWizard with JLine for better user experience
-            try (SetupWizard wizard = new SetupWizard()) {
-                wizardConfig = wizard.run(predefinedLanguage, skipSetup);
-                chooseLanguage = wizardConfig.getLanguage();
-            } catch (IOException e) {
-                log.error("Failed to initialize setup wizard", e);
-                // Fallback to default language
-                chooseLanguage = "eng";
+            // If skipSetup is true or we have a predefined language, skip the interactive wizard
+            if (skipSetup || (predefinedLanguage != null && !predefinedLanguage.isEmpty())) {
+                // Use defaults or predefined language
+                chooseLanguage = (predefinedLanguage != null && !predefinedLanguage.isEmpty()) ? predefinedLanguage : "eng";
+                log.info("Setup wizard skipped. Using language: {}", chooseLanguage);
+            } else {
+                // Try to use the interactive SetupWizard
+                try (SetupWizard wizard = new SetupWizard()) {
+                    wizardConfig = wizard.run(predefinedLanguage, skipSetup);
+                    chooseLanguage = wizardConfig.getLanguage();
+                } catch (Exception e) {
+                    log.warn("Failed to initialize interactive setup wizard: {}", e.getMessage());
+                    log.info("Using default configuration. You can reconfigure by deleting pnx.yml and restarting.");
+                    // Fallback to default language
+                    chooseLanguage = "eng";
+                }
             }
         } else {
             Config configInstance = new Config(config);

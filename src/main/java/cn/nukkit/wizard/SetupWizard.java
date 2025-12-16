@@ -68,9 +68,11 @@ public class SetupWizard implements AutoCloseable {
     }
 
     public SetupWizard() throws IOException {
-        // Initialize JLine terminal
+        // Initialize JLine terminal with fallback to dumb terminal
         this.terminal = TerminalBuilder.builder()
                 .system(true)
+                .dumb(true)  // Allow dumb terminal as fallback
+                .jna(false)   // Disable JNA to avoid issues
                 .build();
 
         // Load available languages
@@ -128,15 +130,30 @@ public class SetupWizard implements AutoCloseable {
      */
     public WizardConfig run(String predefinedLanguage, boolean forceSkip) {
         try {
+            // Check if terminal is interactive (not dumb)
+            boolean isInteractive = !terminal.getType().equals("dumb");
+            
             // Step 1: Language selection (mandatory)
-            String selectedLanguage = selectLanguage(predefinedLanguage);
+            String selectedLanguage;
+            if (!isInteractive && predefinedLanguage == null) {
+                // Non-interactive environment without predefined language - use default
+                selectedLanguage = "eng";
+                log.info("Non-interactive environment detected. Using default language: eng");
+            } else {
+                selectedLanguage = selectLanguage(predefinedLanguage);
+            }
             wizardConfig.setLanguage(selectedLanguage);
 
-            // Step 2: If forceSkip is true, skip everything
+            // Step 2: If forceSkip is true or non-interactive, skip everything
             if (forceSkip) {
                 skipWizard = true;
-                terminal.writer().println("Setup wizard skipped via command line flag. Using default configuration.");
-                terminal.writer().flush();
+                if (isInteractive) {
+                    terminal.writer().println("Setup wizard skipped via command line flag. Using default configuration.");
+                    terminal.writer().flush();
+                }
+            } else if (!isInteractive) {
+                skipWizard = true;
+                log.info("Non-interactive environment detected. Using default configuration.");
             } else {
                 // Ask if user wants to skip the wizard
                 askSkipWizard();
