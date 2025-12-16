@@ -20,6 +20,9 @@ import java.util.*;
  */
 @Slf4j
 public class SetupWizard implements AutoCloseable {
+    /** Regex pattern for validating language codes (3 lowercase letters) */
+    private static final String LANGUAGE_CODE_PATTERN = "^[a-z]{3}$";
+    
     private final Terminal terminal;
     private final LineReader reader;
     private final Map<String, String> availableLanguages;
@@ -54,7 +57,7 @@ public class SetupWizard implements AutoCloseable {
         Map<String, String> languages = new LinkedHashMap<>();
         try (InputStream languageList = getClass().getClassLoader().getResourceAsStream("language/language.list")) {
             if (languageList == null) {
-                throw new IllegalStateException("language/language.list is missing. If you are running a development version, make sure you have run 'git submodule update --init'.");
+                throw new IllegalStateException("language/language.list is missing. If you are running a development version, make sure you have run 'git submodule update --init --recursive'.");
             }
 
             try (Scanner scanner = new Scanner(languageList)) {
@@ -207,7 +210,7 @@ public class SetupWizard implements AutoCloseable {
 
         // Security: prevent path traversal attacks by validating the language code format
         // Language codes should only contain lowercase letters (3 characters typically)
-        if (!languageCode.matches("^[a-z]{3}$")) {
+        if (!languageCode.matches(LANGUAGE_CODE_PATTERN)) {
             log.warn("Invalid language code format (must be 3 lowercase letters): {}", languageCode);
             return false;
         }
