@@ -221,7 +221,8 @@ public class SetupWizard implements AutoCloseable {
         }
 
         // Also check if the language resource file exists
-        try (InputStream conf = getClass().getClassLoader().getResourceAsStream("language/" + languageCode + "/lang.json")) {
+        String resourcePath = String.format("language/%s/lang.json", languageCode);
+        try (InputStream conf = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
             return conf != null;
         } catch (IOException e) {
             return false;
