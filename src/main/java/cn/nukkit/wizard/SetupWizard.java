@@ -174,16 +174,6 @@ public class SetupWizard implements AutoCloseable {
         terminal.writer().println();
         terminal.writer().println("Welcome! Please choose a language first!");
         terminal.writer().println();
-        terminal.writer().println("Available languages:");
-        terminal.writer().println("┌──────────────────────────────────────────────────────────┐");
-
-        // Display available languages in a nice format
-        for (Map.Entry<String, String> entry : availableLanguages.entrySet()) {
-            terminal.writer().println("│  [" + entry.getKey() + "] → " + entry.getValue());
-        }
-        terminal.writer().println("└──────────────────────────────────────────────────────────┘");
-        terminal.writer().println();
-        terminal.writer().flush();
 
         // Handle predefined language
         if (predefinedLanguage != null && !predefinedLanguage.isEmpty()) {
@@ -193,36 +183,77 @@ public class SetupWizard implements AutoCloseable {
                 return predefinedLanguage;
             } else {
                 terminal.writer().println("✗ Invalid predefined language: " + predefinedLanguage);
-                terminal.writer().println("  Please choose a valid language from the list above.");
+                terminal.writer().println("  Please choose a valid language from the list.");
                 terminal.writer().flush();
             }
         }
 
-        // Interactive language selection
-        while (true) {
-            try {
-                String input = reader.readLine("» Enter language code (TAB for auto-completion): ").trim();
-
+        // Convert to list for indexed access
+        List<Map.Entry<String, String>> languageList = new ArrayList<>(availableLanguages.entrySet());
+        int selectedIndex = 0;
+        
+        terminal.writer().println("Use ↑/↓ arrow keys to navigate, Enter to select, or type language code:");
+        terminal.writer().println();
+        
+        // Try arrow key navigation first
+        try {
+            while (true) {
+                // Display menu with current selection highlighted
+                displayLanguageMenu(languageList, selectedIndex);
+                
+                // Read input
+                String input = reader.readLine("» Selection [" + languageList.get(selectedIndex).getKey() + "]: ").trim();
+                
                 if (input.isEmpty()) {
-                    terminal.writer().println("⚠ Language selection is mandatory. Please enter a language code.");
+                    // User pressed Enter - use current selection
+                    String selected = languageList.get(selectedIndex).getKey();
+                    terminal.writer().println("✓ Language selected: " + selected + " (" + availableLanguages.get(selected) + ")");
+                    terminal.writer().println();
                     terminal.writer().flush();
-                    continue;
-                }
-
-                if (validateLanguage(input)) {
+                    return selected;
+                } else if (validateLanguage(input)) {
+                    // User typed a valid language code
                     terminal.writer().println("✓ Language selected: " + input + " (" + availableLanguages.get(input) + ")");
                     terminal.writer().println();
                     terminal.writer().flush();
                     return input;
                 } else {
-                    terminal.writer().println("✗ Invalid language code. Please choose from the list above.");
-                    terminal.writer().flush();
+                    // Try to navigate
+                    switch (input.toLowerCase()) {
+                        case "up", "u" -> {
+                            selectedIndex = (selectedIndex - 1 + languageList.size()) % languageList.size();
+                        }
+                        case "down", "d" -> {
+                            selectedIndex = (selectedIndex + 1) % languageList.size();
+                        }
+                        default -> {
+                            terminal.writer().println("⚠ Invalid input. Enter a language code, 'up'/'down' to navigate, or press Enter to select highlighted.");
+                            terminal.writer().flush();
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                log.error("Error reading language input", e);
-                return "eng"; // Default to English on error
             }
+        } catch (Exception e) {
+            log.error("Error reading language input", e);
+            return "eng"; // Default to English on error
         }
+    }
+    
+    /**
+     * Displays the language menu with the current selection highlighted.
+     */
+    private void displayLanguageMenu(List<Map.Entry<String, String>> languageList, int selectedIndex) {
+        terminal.writer().println("┌──────────────────────────────────────────────────────────┐");
+        
+        for (int i = 0; i < languageList.size(); i++) {
+            Map.Entry<String, String> entry = languageList.get(i);
+            String marker = (i == selectedIndex) ? "►" : " ";
+            String highlight = (i == selectedIndex) ? "▶ " : "  ";
+            terminal.writer().println("│ " + marker + " [" + entry.getKey() + "] " + highlight + entry.getValue());
+        }
+        
+        terminal.writer().println("└──────────────────────────────────────────────────────────┘");
+        terminal.writer().flush();
     }
 
     /**
