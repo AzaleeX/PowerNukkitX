@@ -88,6 +88,7 @@ import cn.nukkit.tags.BlockTags;
 import cn.nukkit.tags.ItemTags;
 import cn.nukkit.utils.*;
 import cn.nukkit.utils.collection.FreezableArrayManager;
+import cn.nukkit.wizard.SetupWizard;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import eu.okaeri.configs.ConfigManager;
@@ -288,39 +289,15 @@ public class Server {
         File config = new File(this.dataPath + "pnx.yml");
         String chooseLanguage = null;
         if (!config.exists()) {
-            log.info("{}Welcome! Please choose a language first!", TextFormat.GREEN);
+            // Use the new SetupWizard with JLine for better user experience
             try {
-                InputStream languageList = this.getClass().getModule().getResourceAsStream("language/language.list");
-                if (languageList == null) {
-                    throw new IllegalStateException("language/language.list is missing. If you are running a development version, make sure you have run 'git submodule update --init'.");
-                }
-                String[] lines = Utils.readFile(languageList).split("\n");
-                for (String line : lines) {
-                    log.info(line);
-                }
+                SetupWizard wizard = new SetupWizard();
+                chooseLanguage = wizard.run(predefinedLanguage);
+                wizard.close();
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            while (chooseLanguage == null) {
-                String lang;
-                if (predefinedLanguage != null) {
-                    log.info("Trying to load language from predefined language: {}", predefinedLanguage);
-                    lang = predefinedLanguage;
-                } else {
-                    lang = this.console.readLine();
-                }
-
-                try (InputStream conf = this.getClass().getClassLoader().getResourceAsStream("language/" + lang + "/lang.json")) {
-                    if (conf != null) {
-                        chooseLanguage = lang;
-                    } else if (predefinedLanguage != null) {
-                        log.warn("No language found for predefined language: {}, please choose a valid language", predefinedLanguage);
-                        predefinedLanguage = null;
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                log.error("Failed to initialize setup wizard", e);
+                // Fallback to default language
+                chooseLanguage = "eng";
             }
         } else {
             Config configInstance = new Config(config);
