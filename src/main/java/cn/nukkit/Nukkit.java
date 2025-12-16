@@ -108,6 +108,7 @@ public class Nukkit {
         OptionSpec<String> vSpec = parser.accepts("v", "Set verbosity of logging").withRequiredArg().ofType(String.class);
         OptionSpec<String> verbositySpec = parser.accepts("verbosity", "Set verbosity of logging").withRequiredArg().ofType(String.class);
         OptionSpec<String> languageSpec = parser.accepts("language", "Set a predefined language").withOptionalArg().ofType(String.class);
+        OptionSpec<Void> skipSetupSpec = parser.accepts("skip-setup", "Skip the setup wizard and use default values");
         OptionSpec<Integer> chromeDebugPortSpec = parser.accepts("chrome-debug", "Debug javascript using chrome dev tool with specific port.").withRequiredArg().ofType(Integer.class);
         OptionSpec<String> jsDebugPortSpec = parser.accepts("js-debug", "Debug javascript using chrome dev tool with specific port.").withRequiredArg().ofType(String.class);
 
@@ -142,6 +143,7 @@ public class Nukkit {
         }
 
         String language = options.valueOf(languageSpec);
+        boolean skipSetup = options.has(skipSetupSpec);
 
         if (options.has(chromeDebugPortSpec)) {
             CHROME_DEBUG_PORT = options.valueOf(chromeDebugPortSpec);
@@ -155,7 +157,7 @@ public class Nukkit {
             if (TITLE) {
                 System.out.print((char) 0x1b + "]0;PowerNukkitX is starting up..." + (char) 0x07);
             }
-            new Server(PATH, DATA_PATH, PLUGIN_PATH, language);
+            new Server(PATH, DATA_PATH, PLUGIN_PATH, language, skipSetup);
         } catch (Throwable t) {
             log.error("", t);
         }

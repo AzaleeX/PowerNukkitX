@@ -252,7 +252,7 @@ public class Server {
     private List<ExperimentEntry> experiments;
     ///
 
-    Server(final String filePath, String dataPath, String pluginPath, String predefinedLanguage) {
+    Server(final String filePath, String dataPath, String pluginPath, String predefinedLanguage, boolean skipSetup) {
         Preconditions.checkState(instance == null, "Already initialized!");
         launchTime = System.currentTimeMillis();
         currentThread = Thread.currentThread(); // Saves the current thread instance as a reference, used in Server#isPrimaryThread()
@@ -288,10 +288,13 @@ public class Server {
 
         File config = new File(this.dataPath + "pnx.yml");
         String chooseLanguage = null;
+        SetupWizard.WizardConfig wizardConfig = null;
+        
         if (!config.exists()) {
             // Use the new SetupWizard with JLine for better user experience
             try (SetupWizard wizard = new SetupWizard()) {
-                chooseLanguage = wizard.run(predefinedLanguage);
+                wizardConfig = wizard.run(predefinedLanguage, skipSetup);
+                chooseLanguage = wizardConfig.getLanguage();
             } catch (IOException e) {
                 log.error("Failed to initialize setup wizard", e);
                 // Fallback to default language
@@ -311,7 +314,18 @@ public class Server {
             it.saveDefaults();
             it.load(true);
         });
-        this.settings.baseSettings().language(chooseLanguage);
+        
+        // Apply wizard configuration if it was run
+        if (wizardConfig != null) {
+            this.settings.baseSettings().language(wizardConfig.getLanguage());
+            this.settings.baseSettings().motd(wizardConfig.getMotd());
+            this.settings.baseSettings().port(wizardConfig.getPort());
+            this.settings.gameplaySettings().gamemode(wizardConfig.getGamemode());
+            this.settings.baseSettings().allowList(wizardConfig.isEnableWhitelist());
+            this.settings.save();
+        } else {
+            this.settings.baseSettings().language(chooseLanguage);
+        }
 
         while(updateConfiguration());
 
@@ -370,6 +384,20 @@ public class Server {
         this.levelMetadata = new LevelMetadataStore();
         this.operators = new Config(this.dataPath + "ops.txt", Config.ENUM);
         this.whitelist = new Config(this.dataPath + "white-list.txt", Config.ENUM);
+        
+        // Apply wizard whitelist and operators configuration if it was run
+        if (wizardConfig != null) {
+            for (String player : wizardConfig.getWhitelistedPlayers()) {
+                this.whitelist.set(player, true);
+            }
+            this.whitelist.save();
+            
+            for (String op : wizardConfig.getOperators()) {
+                this.operators.set(op, true);
+            }
+            this.operators.save();
+        }
+        
         this.banByName = new BanList(this.dataPath + "banned-players.json");
         this.banByName.load();
         this.banByIP = new BanList(this.dataPath + "banned-ips.json");
