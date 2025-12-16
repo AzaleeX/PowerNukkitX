@@ -51,8 +51,7 @@ public class SetupWizard {
      */
     private Map<String, String> loadAvailableLanguages() {
         Map<String, String> languages = new LinkedHashMap<>();
-        try {
-            InputStream languageList = getClass().getClassLoader().getResourceAsStream("language/language.list");
+        try (InputStream languageList = getClass().getClassLoader().getResourceAsStream("language/language.list")) {
             if (languageList == null) {
                 throw new IllegalStateException("language/language.list is missing. If you are running a development version, make sure you have run 'git submodule update --init'.");
             }
