@@ -34,16 +34,22 @@ public class SetupWizard implements AutoCloseable {
      */
     public static class WizardConfig {
         private String language = "eng";
+        private boolean licenseAccepted = false;
         private String serverName = "PowerNukkitX Server";
         private int port = 19132;
         private String motd = "PowerNukkitX Server";
         private int gamemode = 0;
+        private int maxPlayers = 20;
         private boolean enableWhitelist = false;
         private List<String> whitelistedPlayers = new ArrayList<>();
         private List<String> operators = new ArrayList<>();
+        private boolean enableQuery = true;
         
         public String getLanguage() { return language; }
         public void setLanguage(String language) { this.language = language; }
+        
+        public boolean isLicenseAccepted() { return licenseAccepted; }
+        public void setLicenseAccepted(boolean licenseAccepted) { this.licenseAccepted = licenseAccepted; }
         
         public String getServerName() { return serverName; }
         public void setServerName(String serverName) { this.serverName = serverName; }
@@ -57,6 +63,9 @@ public class SetupWizard implements AutoCloseable {
         public int getGamemode() { return gamemode; }
         public void setGamemode(int gamemode) { this.gamemode = gamemode; }
         
+        public int getMaxPlayers() { return maxPlayers; }
+        public void setMaxPlayers(int maxPlayers) { this.maxPlayers = maxPlayers; }
+        
         public boolean isEnableWhitelist() { return enableWhitelist; }
         public void setEnableWhitelist(boolean enableWhitelist) { this.enableWhitelist = enableWhitelist; }
         
@@ -65,6 +74,9 @@ public class SetupWizard implements AutoCloseable {
         
         public List<String> getOperators() { return operators; }
         public void setOperators(List<String> operators) { this.operators = operators; }
+        
+        public boolean isEnableQuery() { return enableQuery; }
+        public void setEnableQuery(boolean enableQuery) { this.enableQuery = enableQuery; }
     }
 
     public SetupWizard() throws IOException {
@@ -123,7 +135,7 @@ public class SetupWizard implements AutoCloseable {
     }
 
     /**
-     * Runs the complete setup wizard.
+     * Runs the complete setup wizard with the new flow.
      *
      * @param predefinedLanguage Optional predefined language from command line
      * @param forceSkip If true, automatically skip the wizard
@@ -135,22 +147,49 @@ public class SetupWizard implements AutoCloseable {
             String selectedLanguage = selectLanguage(predefinedLanguage);
             wizardConfig.setLanguage(selectedLanguage);
 
-            // Step 2: If forceSkip is true, skip everything
+            // Step 2: License acceptance (MANDATORY - will force kill if not accepted)
+            if (!acceptLicense()) {
+                terminal.writer().println();
+                terminal.writer().println("✗ License not accepted. The server cannot start without accepting the license.");
+                terminal.writer().println("✗ Terminating...");
+                terminal.writer().flush();
+                // Force exit
+                System.exit(1);
+                return wizardConfig; // Never reached, but needed for compilation
+            }
+            wizardConfig.setLicenseAccepted(true);
+
+            // Step 3: If forceSkip is true, skip everything
             if (forceSkip) {
                 skipWizard = true;
+                terminal.writer().println();
                 terminal.writer().println("Setup wizard skipped via command line flag. Using default configuration.");
                 terminal.writer().flush();
             } else {
-                // Always try to ask if user wants to skip the wizard
+                // Ask if user wants to skip the wizard
                 askSkipWizard();
                 
-                // Step 3: If not skipping, ask additional configuration questions
+                // Step 4: If not skipping, ask all configuration questions in order
                 if (!skipWizard) {
-                    configureServer();
+                    terminal.writer().println();
+                    terminal.writer().println("ℹ All of these settings can be modified later in the pnx.yml configuration file.");
+                    terminal.writer().println();
+                    terminal.writer().flush();
+                    
+                    configureServerComplete();
                 }
             }
 
+            // Step 5: Display summary and wait for user to start server
+            displaySummaryAndWaitForStart();
+
             return wizardConfig;
+        } catch (Exception e) {
+            log.error("Error during setup wizard", e);
+            wizardConfig.setLanguage("eng"); // Default to English on error
+            return wizardConfig;
+        }
+    }
         } catch (Exception e) {
             log.error("Error during setup wizard", e);
             wizardConfig.setLanguage("eng"); // Default to English on error
@@ -255,6 +294,57 @@ public class SetupWizard implements AutoCloseable {
     }
 
     /**
+     * Displays the license and asks for acceptance.
+     * MANDATORY - will cause program termination if not accepted.
+     *
+     * @return true if license accepted, false otherwise
+     */
+    private boolean acceptLicense() {
+        terminal.writer().println();
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("          GNU Lesser General Public License v3.0");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println();
+        terminal.writer().println("PowerNukkitX is licensed under the GNU LGPL v3.0");
+        terminal.writer().println();
+        terminal.writer().println("This program is free software: you can redistribute it and/or modify");
+        terminal.writer().println("it under the terms of the GNU Lesser General Public License as published");
+        terminal.writer().println("by the Free Software Foundation, either version 3 of the License, or");
+        terminal.writer().println("(at your option) any later version.");
+        terminal.writer().println();
+        terminal.writer().println("This program is distributed in the hope that it will be useful,");
+        terminal.writer().println("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+        terminal.writer().println("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.");
+        terminal.writer().println();
+        terminal.writer().println("See the GNU Lesser General Public License for more details:");
+        terminal.writer().println("https://www.gnu.org/licenses/lgpl-3.0.html");
+        terminal.writer().println();
+        terminal.writer().println("⚠ You MUST accept this license to continue.");
+        terminal.writer().println();
+        terminal.writer().flush();
+
+        while (true) {
+            try {
+                String input = reader.readLine("» Do you accept the license? (yes/no): ").trim().toLowerCase();
+
+                if (input.equals("yes") || input.equals("y")) {
+                    terminal.writer().println("✓ License accepted.");
+                    terminal.writer().flush();
+                    return true;
+                } else if (input.equals("no") || input.equals("n")) {
+                    return false;
+                } else {
+                    terminal.writer().println("⚠ Please answer 'yes' or 'no'.");
+                    terminal.writer().flush();
+                }
+            } catch (Exception e) {
+                log.error("Error reading license acceptance", e);
+                return false;
+            }
+        }
+    }
+
+    /**
      * Asks the user if they want to skip the setup wizard.
      */
     private void askSkipWizard() {
@@ -267,7 +357,7 @@ public class SetupWizard implements AutoCloseable {
 
         while (true) {
             try {
-                String input = reader.readLine("» Do you want to skip the set-up wizard? (Y/n): ").trim().toLowerCase();
+                String input = reader.readLine("» Do you want to skip the setup wizard? (y/n): ").trim().toLowerCase();
 
                 if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
                     skipWizard = true;
@@ -294,9 +384,9 @@ public class SetupWizard implements AutoCloseable {
     }
     
     /**
-     * Configures server settings through interactive prompts.
+     * Configures all server settings through interactive prompts in the correct order.
      */
-    private void configureServer() {
+    private void configureServerComplete() {
         terminal.writer().println();
         terminal.writer().println("═══════════════════════════════════════════════════════════");
         terminal.writer().println("              Server Configuration");
@@ -304,32 +394,26 @@ public class SetupWizard implements AutoCloseable {
         terminal.writer().println();
         terminal.writer().flush();
         
-        // Configure server name
+        // 1. Configure server name
         configureServerName();
         
-        // Configure server port
+        // 2. Configure server port
         configureServerPort();
         
-        // Configure MOTD
-        configureMotd();
-        
-        // Configure gamemode
+        // 3. Configure gamemode
         configureGamemode();
         
-        // Configure whitelist
-        configureWhitelist();
+        // 4. Configure max players
+        configureMaxPlayers();
         
-        // Configure operators
+        // 5. Configure operators
         configureOperators();
         
-        terminal.writer().println();
-        terminal.writer().println("═══════════════════════════════════════════════════════════");
-        terminal.writer().println("          Configuration Complete!");
-        terminal.writer().println("═══════════════════════════════════════════════════════════");
-        terminal.writer().println();
-        terminal.writer().println("✓ Your server will start with these settings.");
-        terminal.writer().println();
-        terminal.writer().flush();
+        // 6. Configure whitelist
+        configureWhitelist();
+        
+        // 7. Configure query
+        configureQuery();
     }
     
     /**
@@ -382,24 +466,6 @@ public class SetupWizard implements AutoCloseable {
         terminal.writer().println("  ✓ Server port: " + wizardConfig.getPort());
         terminal.writer().println();
         terminal.writer().flush();
-    }
-    
-    /**
-     * Configures server MOTD (Message of the Day).
-     */
-    private void configureMotd() {
-        terminal.writer().println("─────────────────────────────────────────────────────────");
-        try {
-            String input = reader.readLine("» Server MOTD [PowerNukkitX Server]: ").trim();
-            if (!input.isEmpty()) {
-                wizardConfig.setMotd(input);
-            }
-            terminal.writer().println("  ✓ Server MOTD: " + wizardConfig.getMotd());
-            terminal.writer().println();
-            terminal.writer().flush();
-        } catch (Exception e) {
-            log.error("Error reading MOTD", e);
-        }
     }
     
     /**
@@ -533,7 +599,7 @@ public class SetupWizard implements AutoCloseable {
     private void configureOperators() {
         terminal.writer().println("─────────────────────────────────────────────────────────");
         try {
-            terminal.writer().println("  Enter operator names separated by commas");
+            terminal.writer().println("  Enter operator names (username or XUID) separated by commas");
             terminal.writer().println("  Example: Admin1, Admin2");
             terminal.writer().println("  Press Enter to skip:");
             terminal.writer().flush();
@@ -565,6 +631,104 @@ public class SetupWizard implements AutoCloseable {
             }
         } catch (Exception e) {
             log.error("Error reading operators", e);
+        }
+    }
+    
+    /**
+     * Configures maximum number of players.
+     */
+    private void configureMaxPlayers() {
+        terminal.writer().println("─────────────────────────────────────────────────────────");
+        while (true) {
+            try {
+                String input = reader.readLine("» Maximum number of players [20]: ").trim();
+                if (input.isEmpty()) {
+                    break; // Use default
+                }
+                
+                int maxPlayers = Integer.parseInt(input);
+                if (maxPlayers < 1) {
+                    terminal.writer().println("  ✗ Invalid number. Please enter a positive number.");
+                    terminal.writer().flush();
+                    continue;
+                }
+                
+                wizardConfig.setMaxPlayers(maxPlayers);
+                break;
+            } catch (NumberFormatException e) {
+                terminal.writer().println("  ✗ Invalid number. Please enter a valid number.");
+                terminal.writer().flush();
+            } catch (Exception e) {
+                log.error("Error reading max players", e);
+                break;
+            }
+        }
+        terminal.writer().println("  ✓ Maximum players: " + wizardConfig.getMaxPlayers());
+        terminal.writer().println();
+        terminal.writer().flush();
+    }
+    
+    /**
+     * Configures query settings.
+     */
+    private void configureQuery() {
+        terminal.writer().println("─────────────────────────────────────────────────────────");
+        
+        while (true) {
+            try {
+                String input = reader.readLine("» Enable Query (server list ping)? (Y/n): ").trim().toLowerCase();
+                
+                if (input.isEmpty() || input.equals("y") || input.equals("yes")) {
+                    wizardConfig.setEnableQuery(true);
+                    terminal.writer().println("  ✓ Query: Enabled");
+                    terminal.writer().println();
+                    terminal.writer().flush();
+                    break;
+                } else if (input.equals("n") || input.equals("no")) {
+                    wizardConfig.setEnableQuery(false);
+                    terminal.writer().println("  ✓ Query: Disabled");
+                    terminal.writer().println();
+                    terminal.writer().flush();
+                    break;
+                } else {
+                    terminal.writer().println("  ✗ Invalid input. Please enter 'y' for yes or 'n' for no.");
+                    terminal.writer().flush();
+                }
+            } catch (Exception e) {
+                log.error("Error reading query setting", e);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Displays a summary of configuration and waits for user to press ENTER to start the server.
+     */
+    private void displaySummaryAndWaitForStart() {
+        terminal.writer().println();
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println("          Configuration Complete!");
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println();
+        terminal.writer().println("✓ Your server is now configured and available at:");
+        terminal.writer().println();
+        
+        // Get IP (we'll use 0.0.0.0 or the configured IP)
+        String ip = "0.0.0.0";
+        terminal.writer().println("    Server Address: " + ip + ":" + wizardConfig.getPort());
+        terminal.writer().println();
+        terminal.writer().println("═══════════════════════════════════════════════════════════");
+        terminal.writer().println();
+        terminal.writer().flush();
+        
+        try {
+            reader.readLine("Press ENTER to start the server...");
+            terminal.writer().println();
+            terminal.writer().println("✓ Starting server...");
+            terminal.writer().println();
+            terminal.writer().flush();
+        } catch (Exception e) {
+            log.error("Error waiting for ENTER", e);
         }
     }
 

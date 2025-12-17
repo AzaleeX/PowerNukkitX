@@ -321,8 +321,10 @@ public class Server {
             this.settings.baseSettings().language(wizardConfig.getLanguage());
             this.settings.baseSettings().motd(wizardConfig.getMotd());
             this.settings.baseSettings().port(wizardConfig.getPort());
+            this.settings.baseSettings().maxPlayers(wizardConfig.getMaxPlayers());
             this.settings.gameplaySettings().gamemode(wizardConfig.getGamemode());
             this.settings.baseSettings().allowList(wizardConfig.isEnableWhitelist());
+            this.settings.networkSettings().enableQuery(wizardConfig.isEnableQuery());
             this.settings.save();
         } else {
             this.settings.baseSettings().language(chooseLanguage);
